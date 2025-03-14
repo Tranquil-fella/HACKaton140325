@@ -90,6 +90,20 @@ class GigaChatApiClient {
      * @throws Exception If request fails
      */
     private function makeRequest($endpoint, $data = [], $method = 'POST') {
+        // Create logs directory if it doesn't exist
+        $logsDir = __DIR__ . '/../logs';
+        if (!is_dir($logsDir)) {
+            mkdir($logsDir, 0755, true);
+        }
+        
+        // Generate log filename with timestamp
+        $logFile = $logsDir . '/gigachat_' . date('Y-m-d') . '.log';
+        
+        // Log request
+        $logEntry = date('Y-m-d H:i:s') . " REQUEST to $endpoint:\n";
+        $logEntry .= json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n";
+        file_put_contents($logFile, $logEntry, FILE_APPEND);
+        
         // Ensure we have a valid token
         $token = $this->getAccessToken();
         
@@ -118,6 +132,12 @@ class GigaChatApiClient {
         }
         
         curl_close($ch);
+        
+        // Log response
+        $logFile = __DIR__ . '/../logs/gigachat_' . date('Y-m-d') . '.log';
+        $logEntry = date('Y-m-d H:i:s') . " RESPONSE (HTTP $httpCode):\n";
+        $logEntry .= $response . "\n\n";
+        file_put_contents($logFile, $logEntry, FILE_APPEND);
         
         if ($httpCode < 200 || $httpCode >= 300) {
             throw new Exception('Ошибка API запроса. Код HTTP: ' . $httpCode . '. Ответ: ' . $response);
