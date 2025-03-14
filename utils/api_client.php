@@ -314,8 +314,8 @@ EOT;
         $fontSize = 5;
         $nameWidth = imagefontwidth($fontSize) * strlen($nameText);
         $categoryWidth = imagefontwidth($fontSize) * strlen($categoryText);
-        $nameX = ($width - $nameWidth) / 2;
-        $categoryX = ($width - $categoryWidth) / 2;
+        $nameX = intval(($width - $nameWidth) / 2);
+        $categoryX = intval(($width - $categoryWidth) / 2);
         
         // Draw text
         imagestring($image, $fontSize, $nameX, $height/2 - 20, $nameText, $textColor);
