@@ -1,15 +1,9 @@
-/**
- * Main JavaScript file for product description analyzer
- */
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize dropzone functionality
     setupDropzone();
     console.log('Dropzone initialized');
 });
 
-/**
- * Setup the dropzone for file uploads
- */
 function setupDropzone() {
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file-input');
@@ -65,8 +59,15 @@ function setupDropzone() {
 
     function handleFileSelect(file) {
         // Check file type
-        const validTypes = ['text/csv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
-        if (!validTypes.includes(file.type)) {
+        const validTypes = [
+            'text/csv',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel'
+        ];
+        
+        if (!validTypes.includes(file.type) && 
+            !file.name.endsWith('.csv') && 
+            !file.name.endsWith('.xlsx')) {
             alert('Пожалуйста, загрузите файл CSV или XLSX');
             return;
         }
@@ -77,5 +78,10 @@ function setupDropzone() {
         fileSize.textContent = `${(file.size / 1024).toFixed(2)} KB`;
         submitBtn.disabled = false;
         progressBar.style.width = '100%';
+
+        // Update file input
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
     }
 }
