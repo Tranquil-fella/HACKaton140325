@@ -159,7 +159,7 @@ class GigaChatApiClient {
 EOT;
 
         $data = [
-            'model' => 'GigaChat-preview',
+            'model' => 'GigaChat',
             'messages' => [
                 [
                     'role' => 'user',
