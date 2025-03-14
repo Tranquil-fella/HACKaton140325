@@ -238,16 +238,18 @@ EOT;
                 throw new Exception('Неверный формат ответа от API при генерации изображения');
             }
             
-            // Extract the image URL from the response content
+            // Extract the image ID from the response content
             $content = $response['choices'][0]['message']['content'];
             $matches = [];
             
-            // Try to find image tag or markdown in the response
-            if (preg_match('/<img.*?src="(.*?)".*?>/i', $content, $matches) || 
-                preg_match('/!\[.*?\]\((.*?)\)/i', $content, $matches)) {
-                $imageUrl = $matches[1];
+            // Try to find image ID in the response
+            if (preg_match('/<img.*?src="([^"]+)".*?fuse="true".*?>/i', $content, $matches)) {
+                $imageId = $matches[1];
                 $imageName = md5($name . $category . time()) . '.png';
                 $imagePath = $imagesDir . '/' . $imageName;
+                
+                // Use the image ID to construct the download URL (you'll need to implement this part based on GigaChat's image retrieval API)
+                $imageUrl = "https://gigachat.devices.sberbank.ru/api/v1/files/" . $imageId;
                 
                 // Download the image
                 $imageContent = file_get_contents($imageUrl);
