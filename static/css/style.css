@@ -10,21 +10,22 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 900px;
+    padding: 2rem 1rem;
 }
 
 .card {
-    margin-bottom: 20px;
+    margin-bottom: 1.5rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     background-color: #161b22;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
 .card-header {
@@ -55,11 +56,12 @@ body {
 .dropzone {
     border: 2px dashed rgba(255, 255, 255, 0.2);
     border-radius: 12px;
-    padding: 3rem;
+    padding: 2rem;
     text-align: center;
     transition: all 0.3s ease;
     cursor: pointer;
     background-color: rgba(255, 255, 255, 0.02);
+    margin: 1rem 0;
 }
 
 .dropzone:hover, .dropzone.active {
@@ -68,10 +70,20 @@ body {
 }
 
 .upload-icon {
-    width: 64px;
-    height: 64px;
-    margin-bottom: 1.5rem;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
     color: #8b949e;
+}
+
+.dz-message h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.dz-message p {
+    color: #8b949e;
+    font-size: 0.9rem;
 }
 
 .dropzone:hover .upload-icon {
