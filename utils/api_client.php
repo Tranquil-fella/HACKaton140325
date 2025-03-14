@@ -215,6 +215,9 @@ EOT;
         // Use chat completions endpoint to generate images
         $data = [
             'model' => 'GigaChat',
+            'stream' => false,
+            'update_interval' => 0,
+            'function_call' => 'auto',
             'messages' => [
                 [
                     'role' => 'system',
@@ -224,8 +227,7 @@ EOT;
                     'role' => 'user',
                     'content' => $prompt
                 ]
-            ],
-            'temperature' => 0.7
+            ]
         ];
         
         try {
