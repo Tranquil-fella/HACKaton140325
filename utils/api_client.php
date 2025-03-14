@@ -150,8 +150,7 @@ class GigaChatApiClient {
 {$description}
 
 Формат ответа должен быть в JSON:
-{
-  "seo_score": число от 1 до 10,
+        {гргррвраfdfdbbsfbnsfnggkfkfkfksgfhfhwertwrwerwrwr51516515  "seo_score": число от 1 до 10,
   "completeness_score": число от 1 до 10,
   "readability_score": число от 1 до 10,
   "recommendations": ["рекомендация 1", "рекомендация 2", "рекомендация 3"]
