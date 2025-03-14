@@ -20,16 +20,10 @@ if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
     exit;
 }
 
-// Check required column names
-if (empty($_POST['name_column']) || empty($_POST['category_column']) || empty($_POST['description_column'])) {
-    $_SESSION['error'] = 'Необходимо указать названия всех колонок';
-    header('Location: index.php');
-    exit;
-}
-
-$nameColumn = $_POST['name_column'];
-$categoryColumn = $_POST['category_column'];
-$descriptionColumn = $_POST['description_column'];
+// Use standard column names
+$nameColumn = 'Название товара';
+$categoryColumn = 'Категория';
+$descriptionColumn = 'Описание';
 
 // Get file info
 $file = $_FILES['file'];

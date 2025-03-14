@@ -56,19 +56,13 @@ require_once 'utils/functions.php';
                                 </div>
                             </div>
 
-                            <div class="form-group mt-3">
-                                <label for="name-column">Название товара (колонка):</label>
-                                <input type="text" class="form-control" id="name-column" name="name_column" placeholder="Например: Название товара" required>
-                            </div>
-
-                            <div class="form-group mt-3">
-                                <label for="category-column">Категория товара (колонка):</label>
-                                <input type="text" class="form-control" id="category-column" name="category_column" placeholder="Например: Категория" required>
-                            </div>
-
-                            <div class="form-group mt-3">
-                                <label for="description-column">Описание товара (колонка):</label>
-                                <input type="text" class="form-control" id="description-column" name="description_column" placeholder="Например: Описание" required>
+                            <div class="alert alert-info">
+                                <p><strong>Примечание:</strong> Файл должен содержать следующие колонки:</p>
+                                <ul>
+                                    <li><strong>Название товара</strong> - название анализируемого товара</li>
+                                    <li><strong>Категория</strong> - категория товара (опционально)</li>
+                                    <li><strong>Описание</strong> - описание товара для анализа</li>
+                                </ul>
                             </div>
 
                             <button type="submit" class="btn btn-primary mt-3 w-100" id="submit-btn" disabled>Начать анализ</button>

@@ -39,21 +39,39 @@ class XLSXProcessor {
             // Get header row
             $header = $worksheetData[0];
             
-            // Find column indexes
-            $nameIndex = array_search($nameColumn, $header);
-            $categoryIndex = array_search($categoryColumn, $header);
-            $descriptionIndex = array_search($descriptionColumn, $header);
+            // Find column indexes (case-insensitive search)
+            $nameIndex = false;
+            $categoryIndex = false;
+            $descriptionIndex = false;
             
-            if ($nameIndex === false) {
-                throw new Exception('Колонка "' . $nameColumn . '" не найдена в файле');
+            foreach ($header as $index => $colName) {
+                $colNameLower = mb_strtolower(trim($colName));
+                $nameColumnLower = mb_strtolower(trim($nameColumn));
+                $categoryColumnLower = mb_strtolower(trim($categoryColumn));
+                $descriptionColumnLower = mb_strtolower(trim($descriptionColumn));
+                
+                if ($colNameLower === $nameColumnLower) {
+                    $nameIndex = $index;
+                }
+                if ($colNameLower === $categoryColumnLower) {
+                    $categoryIndex = $index;
+                }
+                if ($colNameLower === $descriptionColumnLower) {
+                    $descriptionIndex = $index;
+                }
             }
             
-            if ($categoryIndex === false) {
-                throw new Exception('Колонка "' . $categoryColumn . '" не найдена в файле');
+            if ($nameIndex === false) {
+                throw new Exception('Колонка "' . $nameColumn . '" не найдена в файле. Убедитесь, что файл содержит колонку с точным названием "Название товара".');
             }
             
             if ($descriptionIndex === false) {
-                throw new Exception('Колонка "' . $descriptionColumn . '" не найдена в файле');
+                throw new Exception('Колонка "' . $descriptionColumn . '" не найдена в файле. Убедитесь, что файл содержит колонку с точным названием "Описание".');
+            }
+            
+            // Category is optional, so if it's not found, just log a warning
+            if ($categoryIndex === false) {
+                error_log('Колонка "' . $categoryColumn . '" не найдена в файле. Категория будет пустой.');
             }
             
             // Extract products data, starting from row 1 (skip header)
@@ -61,14 +79,19 @@ class XLSXProcessor {
             for ($i = 1; $i < count($worksheetData); $i++) {
                 $row = $worksheetData[$i];
                 
-                if (count($row) <= max($nameIndex, $categoryIndex, $descriptionIndex)) {
+                // Check if we have at least the name and description columns
+                if (count($row) <= max($nameIndex, $descriptionIndex)) {
                     // Skip rows with insufficient columns
                     continue;
                 }
                 
                 $name = trim($row[$nameIndex]);
-                $category = trim($row[$categoryIndex]);
                 $description = trim($row[$descriptionIndex]);
+                
+                // Handle the case when category column is missing
+                $category = $categoryIndex !== false && isset($row[$categoryIndex]) ? 
+                            trim($row[$categoryIndex]) : 
+                            'Не указано';
                 
                 // Skip rows with empty required fields
                 if (empty($name) || empty($description)) {
