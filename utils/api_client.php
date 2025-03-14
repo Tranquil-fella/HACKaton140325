@@ -230,7 +230,18 @@ EOT;
      * @throws Exception If image generation fails
      */
     public function generateProductImage($name, $category, $imagesDir) {
+        // Create logs directory if it doesn't exist
+        $logsDir = __DIR__ . '/../logs';
+        if (!is_dir($logsDir)) {
+            mkdir($logsDir, 0755, true);
+        }
+        
+        $logFile = $logsDir . '/image_generation.log';
+        file_put_contents($logFile, date('Y-m-d H:i:s') . " Starting image generation for: $name\n", FILE_APPEND);
+        
         $prompt = "Сгенерируй реалистичное профессиональное изображение товара для каталога. Товар: {$name}. Категория: {$category}. Профессиональное фото на белом фоне. Без текста и надписей.";
+        
+        file_put_contents($logFile, date('Y-m-d H:i:s') . " Prompt: $prompt\n", FILE_APPEND);
         
         // Use chat completions endpoint to generate images
         $data = [
@@ -258,8 +269,12 @@ EOT;
                 throw new Exception('Неверный формат ответа от API при генерации изображения');
             }
             
+            // Log the response
+            file_put_contents($logFile, date('Y-m-d H:i:s') . " API Response:\n" . json_encode($response, JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
+            
             // Extract the image ID from the response content
             $content = $response['choices'][0]['message']['content'];
+            file_put_contents($logFile, date('Y-m-d H:i:s') . " Content: $content\n", FILE_APPEND);
             $matches = [];
             
             // Try to find image ID in the response
