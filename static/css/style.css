@@ -1,82 +1,113 @@
 /**
- * Custom styles for product description analyzer
+ * Main styles for Product Description Analyzer
  */
 
+/* General styles */
 body {
-    min-height: 100vh;
-    background-color: #121212;
-    color: #e0e0e0;
+    background-color: #0c1219;
+    color: #f8f9fa;
 }
 
-.container {
-    max-width: 1200px;
+.card {
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Upload zone styles */
+.card-header {
+    font-weight: 600;
+    border-top-left-radius: 8px !important;
+    border-top-right-radius: 8px !important;
+}
+
+/* Dropzone styles */
 .dropzone {
     border: 2px dashed #6c757d;
-    border-radius: 5px;
-    padding: 30px;
+    border-radius: 8px;
+    padding: 40px;
     text-align: center;
+    transition: all 0.3s ease;
     cursor: pointer;
-    transition: border 0.3s, background-color 0.3s;
-    background-color: rgba(255, 255, 255, 0.05);
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
-.dropzone:hover, .dropzone.dragover {
+.dropzone:hover, .dropzone.active {
     border-color: #007bff;
-    background-color: rgba(0, 123, 255, 0.1);
+    background-color: rgba(0, 123, 255, 0.05);
 }
 
 .upload-icon {
-    width: 64px;
-    height: 64px;
-    color: #6c757d;
+    width: 48px;
+    height: 48px;
     margin-bottom: 15px;
+    color: #6c757d;
 }
 
-.dropzone:hover .upload-icon, .dropzone.dragover .upload-icon {
+.dropzone:hover .upload-icon, .dropzone.active .upload-icon {
     color: #007bff;
 }
 
-/* Product card styles */
+/* Results page styles */
+.stats-box {
+    background-color: #1c242f;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.stats-box h3 {
+    font-size: 2rem;
+    margin-bottom: 5px;
+    color: #17a2b8;
+}
+
+.download-box {
+    background-color: #1c242f;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 15px;
+}
+
 .product-card {
-    margin-bottom: 2rem;
-    border: none;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s;
 }
 
 .product-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
 
 .product-image-container {
-    width: 100%;
-    height: 200px;
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 10px;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+    height: 200px;
     overflow: hidden;
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 5px;
 }
 
 .product-image {
     max-width: 100%;
-    max-height: 200px;
+    max-height: 180px;
     object-fit: contain;
 }
 
 .product-image-placeholder {
-    width: 100%;
-    height: 200px;
+    background-color: #1c242f;
+    border-radius: 8px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 5px;
+    align-items: center;
+    height: 200px;
     color: #6c757d;
 }
 
@@ -86,9 +117,17 @@ body {
     margin-bottom: 10px;
 }
 
-/* Score display styles */
+.description-text {
+    font-size: 0.9rem;
+    max-height: 150px;
+    overflow-y: auto;
+    padding-right: 10px;
+    color: #d1d3d6;
+}
+
 .scores-container {
-    margin-top: 20px;
+    margin-top: 15px;
+    margin-bottom: 15px;
 }
 
 .score-item {
@@ -96,78 +135,41 @@ body {
 }
 
 .score-label {
-    font-weight: 500;
     margin-bottom: 5px;
+    font-weight: 600;
 }
 
-/* Statistics box */
-.stats-box {
-    padding: 15px;
-    border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.05);
-    margin-bottom: 15px;
+.progress {
+    height: 25px;
+    background-color: #1c242f;
 }
 
-.stats-box h3 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 5px;
-    color: #17a2b8;
-}
-
-/* Description text */
-.description-text {
-    max-height: 150px;
-    overflow-y: auto;
-    padding-right: 10px;
-    background-color: rgba(255, 255, 255, 0.03);
-    padding: 10px;
-    border-radius: 5px;
-}
-
-/* Recommendations */
-.recommendations {
-    background-color: rgba(0, 123, 255, 0.1);
-    padding: 15px;
-    border-radius: 5px;
+.progress-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    transition: width 0.6s ease;
 }
 
 .recommendations ul {
-    margin-bottom: 0;
-    padding-left: 20px;
+    color: #d1d3d6;
 }
 
-.recommendations li {
-    margin-bottom: 5px;
+/* File info box */
+#file-info {
+    transition: all 0.3s ease;
 }
 
-/* Download box */
-.download-box {
-    background-color: rgba(255, 255, 255, 0.05);
-    padding: 20px;
-    border-radius: 5px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.download-box h4 {
-    margin-bottom: 20px;
-}
-
-/* Responsive adjustments */
+/* Mobile optimizations */
 @media (max-width: 768px) {
-    .product-card .row {
-        flex-direction: column;
-    }
-    
-    .col-md-4, .col-md-8 {
-        width: 100%;
+    .dropzone {
+        padding: 20px;
     }
     
     .product-image-container,
     .product-image-placeholder {
-        margin-bottom: 20px;
+        height: 150px;
+        margin-bottom: 15px;
     }
 }

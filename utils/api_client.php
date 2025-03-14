@@ -211,51 +211,118 @@ EOT;
      * @throws Exception If image generation fails
      */
     public function generateProductImage($name, $category, $imagesDir) {
-        $prompt = "Высококачественное изображение товара: {$name}. Категория: {$category}. Профессиональное фото на белом фоне.";
+        $prompt = "Сгенерируй реалистичное профессиональное изображение товара для каталога. Товар: {$name}. Категория: {$category}. Профессиональное фото на белом фоне. Без текста и надписей.";
         
+        // Use chat completions endpoint to generate images
         $data = [
-            'model' => 'GigaChat:latest',
+            'model' => 'GigaChat',
             'messages' => [
                 [
+                    'role' => 'system',
+                    'content' => 'Ты - генератор изображений товаров для каталога. Создавай высококачественные изображения без текста и надписей.'
+                ],
+                [
                     'role' => 'user',
-                    'content' => [
-                        [
-                            'type' => 'text',
-                            'text' => $prompt
-                        ]
-                    ]
+                    'content' => $prompt
                 ]
             ],
-            'update_interval' => 0,
             'temperature' => 0.7
         ];
         
         try {
-            $response = $this->makeRequest('/images/generations', $data);
+            // Make API request for image
+            $response = $this->makeRequest('/chat/completions', $data);
             
-            if (!isset($response['data'][0]['url'])) {
+            if (!isset($response['choices'][0]['message']['content'])) {
                 throw new Exception('Неверный формат ответа от API при генерации изображения');
             }
             
-            // Download the image
-            $imageUrl = $response['data'][0]['url'];
-            $imageName = md5($name . $category . time()) . '.png';
-            $imagePath = $imagesDir . '/' . $imageName;
+            // Extract the image URL from the response content
+            $content = $response['choices'][0]['message']['content'];
+            $matches = [];
             
-            $imageContent = file_get_contents($imageUrl);
-            if ($imageContent === false) {
-                throw new Exception('Не удалось скачать изображение по URL: ' . $imageUrl);
+            // Try to find image tag or markdown in the response
+            if (preg_match('/<img.*?src="(.*?)".*?>/i', $content, $matches) || 
+                preg_match('/!\[.*?\]\((.*?)\)/i', $content, $matches)) {
+                $imageUrl = $matches[1];
+                $imageName = md5($name . $category . time()) . '.png';
+                $imagePath = $imagesDir . '/' . $imageName;
+                
+                // Download the image
+                $imageContent = file_get_contents($imageUrl);
+                if ($imageContent === false) {
+                    // Generate a placeholder image
+                    $this->generatePlaceholderImage($name, $category, $imagePath);
+                    return $imagePath;
+                }
+                
+                if (file_put_contents($imagePath, $imageContent) === false) {
+                    throw new Exception('Не удалось сохранить изображение');
+                }
+                
+                return $imagePath;
+            } else {
+                // Generate a placeholder image since no URL was found
+                $imageName = md5($name . $category . time()) . '.png';
+                $imagePath = $imagesDir . '/' . $imageName;
+                $this->generatePlaceholderImage($name, $category, $imagePath);
+                return $imagePath;
             }
             
-            if (file_put_contents($imagePath, $imageContent) === false) {
-                throw new Exception('Не удалось сохранить изображение');
-            }
-            
-            return $imagePath;
         } catch (Exception $e) {
             // Log the error but don't halt execution
             error_log('Error generating image: ' . $e->getMessage());
-            return '';
+            
+            // Generate placeholder image
+            $imageName = md5($name . $category . time()) . '.png';
+            $imagePath = $imagesDir . '/' . $imageName;
+            $this->generatePlaceholderImage($name, $category, $imagePath);
+            return $imagePath;
         }
+    }
+    
+    /**
+     * Generate a simple placeholder image with product name and category
+     * 
+     * @param string $name Product name
+     * @param string $category Product category
+     * @param string $outputPath Path to save the generated image
+     * @return void
+     */
+    private function generatePlaceholderImage($name, $category, $outputPath) {
+        // Create image
+        $width = 600;
+        $height = 400;
+        $image = imagecreatetruecolor($width, $height);
+        
+        // Define colors
+        $backgroundColor = imagecolorallocate($image, 240, 240, 240);
+        $textColor = imagecolorallocate($image, 50, 50, 50);
+        $borderColor = imagecolorallocate($image, 200, 200, 200);
+        
+        // Fill background
+        imagefilledrectangle($image, 0, 0, $width - 1, $height - 1, $backgroundColor);
+        
+        // Draw border
+        imagerectangle($image, 0, 0, $width - 1, $height - 1, $borderColor);
+        
+        // Write product info
+        $nameText = "Товар: " . $name;
+        $categoryText = "Категория: " . $category;
+        
+        // Center text
+        $fontSize = 5;
+        $nameWidth = imagefontwidth($fontSize) * strlen($nameText);
+        $categoryWidth = imagefontwidth($fontSize) * strlen($categoryText);
+        $nameX = ($width - $nameWidth) / 2;
+        $categoryX = ($width - $categoryWidth) / 2;
+        
+        // Draw text
+        imagestring($image, $fontSize, $nameX, $height/2 - 20, $nameText, $textColor);
+        imagestring($image, $fontSize, $categoryX, $height/2 + 10, $categoryText, $textColor);
+        
+        // Save image
+        imagepng($image, $outputPath);
+        imagedestroy($image);
     }
 }
