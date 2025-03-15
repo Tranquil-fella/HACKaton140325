@@ -10,6 +10,14 @@ if (!isset($_SESSION['products']) || empty($_SESSION['products'])) {
     exit;
 }
 
+// Clean up old files after processing
+register_shutdown_function(function() {
+    if (isset($_SESSION['savedFilePath'])) {
+        @unlink($_SESSION['savedFilePath']);
+        unset($_SESSION['savedFilePath']);
+    }
+});
+
 // Initialize API client
 $apiClient = new GigaChatApiClient();
 

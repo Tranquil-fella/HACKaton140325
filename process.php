@@ -45,17 +45,28 @@ try {
     if (!is_dir($uploadsDir)) {
         mkdir($uploadsDir, 0755, true);
     }
-    
+
     // Create temp directory for images
     $imagesDir = __DIR__ . '/uploads/images';
     if (!is_dir($imagesDir)) {
         mkdir($imagesDir, 0755, true);
     }
-    
+
+    // Clean up old files if they exist
+    if (isset($_SESSION['savedFilePath']) && file_exists($_SESSION['savedFilePath'])) {
+        unlink($_SESSION['savedFilePath']);
+    }
+
     // Save the uploaded file
     $savedFilePath = $uploadsDir . '/' . uniqid() . '_' . $filename;
-    move_uploaded_file($tempPath, $savedFilePath);
-    
+    if (!move_uploaded_file($tempPath, $savedFilePath)) {
+        throw new Exception('Failed to move uploaded file');
+    }
+
+    // Clear previous session data
+    unset($_SESSION['products']);
+    unset($_SESSION['results']);
+
     // Parse the file content
     $products = [];
     if ($fileExt === 'csv') {
@@ -65,19 +76,19 @@ try {
         $processor = new XLSXProcessor();
         $products = $processor->parseFile($savedFilePath, $nameColumn, $categoryColumn, $descriptionColumn);
     }
-    
+
     if (empty($products)) {
         throw new Exception('Не удалось найти данные в файле или указанные колонки отсутствуют');
     }
-    
+
     // Save products to session for processing
     $_SESSION['products'] = $products;
     $_SESSION['savedFilePath'] = $savedFilePath;
-    
+
     // Redirect to results page for processing
     header('Location: results.php');
     exit;
-    
+
 } catch (Exception $e) {
     $_SESSION['error'] = 'Ошибка обработки файла: ' . $e->getMessage();
     header('Location: index.php');
