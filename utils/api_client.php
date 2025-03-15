@@ -308,26 +308,45 @@ EOT;
         curl_setopt($ch, CURLOPT_URL, $this->baseUrl . "/files/{$imageId}/content");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            "Accept: application/jpg",
+            "Accept: image/jpeg, image/png, image/*",
             "Authorization: Bearer " . $this->accessToken
         ]);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Note: Enable in production
-
-        $imageData = curl_exec($ch);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_HEADER, true);
+        
+        $response = curl_exec($ch);
         
         if (curl_errno($ch)) {
             throw new Exception("cURL Error: " . curl_error($ch));
         }
 
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        
         curl_close($ch);
 
         if ($httpCode !== 200) {
             throw new Exception("Failed to download image. HTTP Code: $httpCode");
         }
 
+        // Separate headers and body
+        $headers = substr($response, 0, $headerSize);
+        $imageData = substr($response, $headerSize);
+
+        // Log headers for debugging
+        error_log("Image download headers: " . $headers);
+        
+        if (empty($imageData)) {
+            throw new Exception("No image data received");
+        }
+
         if (file_put_contents($outputFilePath, $imageData) === false) {
             throw new Exception("Failed to save the image to $outputFilePath");
+        }
+        
+        // Verify file was created and has content
+        if (!file_exists($outputFilePath) || filesize($outputFilePath) === 0) {
+            throw new Exception("Image file is empty or not created");
         }
     }
 
