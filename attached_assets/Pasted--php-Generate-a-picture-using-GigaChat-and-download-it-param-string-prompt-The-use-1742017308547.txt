@@ -1,0 +1,86 @@
+<?php
+
+/**
+ * Generate a picture using GigaChat and download it.
+ *
+ * @param string $prompt The user’s prompt for the image (e.g., “Нарисуй розового кота”).
+ * @param string $outputFilePath Where to save the downloaded image file.
+ * @return void
+ * @throws Exception If any step in the process fails.
+ */
+public function generateAndDownloadPicture($prompt, $outputFilePath) {
+    // Step 1: Generate the picture
+    $endpoint = "/chat/completions";
+    $requestData = [
+        "model" => "GigaChat",
+        "messages" => [
+            [
+                "role" => "system",
+                "content" => "Ты — Василий Кандинский"
+            ],
+            [
+                "role" => "user",
+                "content" => $prompt
+            ]
+        ],
+        "function_call" => "auto"
+    ];
+
+    $response = $this->makeRequest($endpoint, $requestData, "POST");
+
+    // Step 2: Parse the response
+    if (!isset($response['choices'][0]['message']['content'])) {
+        throw new Exception("Invalid response from GigaChat API: No content found.");
+    }
+
+    $content = $response['choices'][0]['message']['content'];
+    if (!preg_match('/<img src="([^"]+)"/', $content, $matches)) {
+        throw new Exception("No image ID found in the response content.");
+    }
+
+    $imageId = $matches[1];
+
+    // Step 3: Download the picture
+    $this->downloadPicture($imageId, $outputFilePath);
+}
+
+/**
+ * Download a picture from GigaChat API.
+ *
+ * @param string $imageId The unique ID of the image to download.
+ * @param string $outputFilePath Where to save the downloaded image file.
+ * @return void
+ * @throws Exception If the download fails.
+ */
+private function downloadPicture($imageId, $outputFilePath) {
+    $endpoint = "/files/{$imageId}/content";
+    $headers = [
+        "Accept: application/jpg",
+        "Authorization: Bearer " . $this->getAccessToken()
+    ];
+
+    $url = $this->baseUrl . $endpoint;
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); // Enable this in production
+
+    $imageData = curl_exec($ch);
+
+    if (curl_errno($ch)) {
+        throw new Exception("cURL Error: " . curl_error($ch));
+    }
+
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode !== 200) {
+        throw new Exception("Failed to download image. HTTP Code: $httpCode");
+    }
+
+    // Save the file
+    if (file_put_contents($outputFilePath, $imageData) === false) {
+        throw new Exception("Failed to save the image to $outputFilePath");
+    }
+}
