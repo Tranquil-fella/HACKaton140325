@@ -63,9 +63,12 @@ try {
         throw new Exception('Failed to move uploaded file');
     }
 
-    // Clear previous session data
+    // Clear all previous session data
     unset($_SESSION['products']);
     unset($_SESSION['results']);
+    unset($_SESSION['analyzed_products']);
+    unset($_SESSION['results_csv_path']);
+    unset($_SESSION['images_zip_path']);
 
     // Parse the file content
     $products = [];

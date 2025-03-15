@@ -340,11 +340,49 @@ EOT;
             throw new Exception("No image data received");
         }
 
-        if (file_put_contents($outputFilePath, $imageData) === false) {
-            throw new Exception("Failed to save the image to $outputFilePath");
+        // Save original image to temp file
+        $tempFile = tempnam(sys_get_temp_dir(), 'img_');
+        if (file_put_contents($tempFile, $imageData) === false) {
+            throw new Exception("Failed to save temporary image");
         }
-        
-        // Verify file was created and has content
+
+        // Load and resize image
+        $image = imagecreatefromstring($imageData);
+        if ($image === false) {
+            unlink($tempFile);
+            throw new Exception("Failed to create image from data");
+        }
+
+        // Set maximum dimensions
+        $maxWidth = 800;
+        $maxHeight = 600;
+
+        // Get original dimensions
+        $width = imagesx($image);
+        $height = imagesy($image);
+
+        // Calculate new dimensions
+        if ($width > $maxWidth || $height > $maxHeight) {
+            $ratio = min($maxWidth / $width, $maxHeight / $height);
+            $newWidth = round($width * $ratio);
+            $newHeight = round($height * $ratio);
+
+            // Create new image
+            $newImage = imagecreatetruecolor($newWidth, $newHeight);
+            imagecopyresampled($newImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+            
+            // Save resized image
+            imagejpeg($newImage, $outputFilePath, 90);
+            imagedestroy($newImage);
+        } else {
+            // Save original if it's small enough
+            file_put_contents($outputFilePath, $imageData);
+        }
+
+        imagedestroy($image);
+        unlink($tempFile);
+
+        // Verify file was created
         if (!file_exists($outputFilePath) || filesize($outputFilePath) === 0) {
             throw new Exception("Image file is empty or not created");
         }
