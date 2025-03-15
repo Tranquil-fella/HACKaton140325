@@ -295,16 +295,24 @@ EOT;
             // Try to find image ID in the response
             if (preg_match('/<img.*?src="([^"]+)".*?fuse="true".*?>/i', $content, $matches)) {
                 $imageId = $matches[1];
-                $imageName = md5($name . $category . time()) . '.png';
+                $imageName = md5($name . $category . time()) . '.jpg';
                 $imagePath = $imagesDir . '/' . $imageName;
 
-                // Use the image ID to construct the download URL (you'll need to implement this part based on GigaChat's image retrieval API)
-                $imageUrl = "https://gigachat.devices.sberbank.ru/api/v1/files/" . $imageId;
+                // Download image using curl
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, "https://gigachat.devices.sberbank.ru/api/v1/files/{$imageId}/content");
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Accept: application/jpg',
+                    'Authorization: Bearer ' . $this->accessToken
+                ]);
+                
+                $imageContent = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
 
-                // Download the image
-                $imageContent = file_get_contents($imageUrl);
-                if ($imageContent === false) {
-                    // Generate a placeholder image
+                if ($httpCode !== 200 || empty($imageContent)) {
+                    // Generate a placeholder image if download failed
                     $this->generatePlaceholderImage($name, $category, $imagePath);
                     return $imagePath;
                 }
