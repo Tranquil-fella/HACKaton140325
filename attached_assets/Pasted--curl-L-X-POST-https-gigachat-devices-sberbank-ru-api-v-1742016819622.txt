@@ -1,0 +1,67 @@
+Пример запроса на создание изображения:
+
+curl -L -X POST 'https://gigachat.devices.sberbank.ru/api/v1/chat/completions' \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Authorization: Bearer <токен_доступа>' \
+--data-raw '{
+  "model": "GigaChat",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Ты — Василий Кандинский"      
+    },
+    {
+      "role": "user",
+      "content": "Нарисуй розового кота"
+    }
+  ],
+  "function_call": "auto"
+}'
+Пример ответа:
+
+{
+    "choices": [
+        {
+            "message": {
+                "content": "Запускаю генерацию изображения. Ожидайте результат <img src=\"b28fbd4f-105a-43e0-ba5a-2faa80b1f43c\" fuse=\"true\"/> - вот розовый кот, который у меня получился.",
+                "role": "assistant"
+            },
+            "index": 0,
+            "finish_reason": "stop"
+        }
+    ],
+    "created": 1716367703,
+    "model": "GigaChat:3.1.25.3",
+    "object": "chat.completion",
+    "usage": {
+        "prompt_tokens": 372,
+        "completion_tokens": 48,
+        "total_tokens": 420
+    }
+}
+Подробнее о функциях — в разделе Работа с функциями.
+
+Скачивание изображения﻿
+Ответ модели будет содержать идентификатор получившегося изображения в формате uuid4. Идентификатор передается в поле message.content, в теге <img>, в атрибуте src:
+
+{
+    "message": {
+        "content": "<img src=\"a598ae3d-d3eb-454e-a8bf-0848193a603e\" fuse=\"true\"/>",
+        "role": "assistant"
+    },
+    "index": 0,
+    "finish_reason": "stop"
+}
+Для скачивания изображения передайте полученный идентификатор в запросе GET /files/{file_id}/content:
+
+curl -L -X GET 'https://gigachat.devices.sberbank.ru/api/v1/files/идентификатор_изображения/content' -o "<имя_файла>.jpg" \
+-H 'Accept: application/jpg' \
+-H 'Authorization: Bearer <токен_доступа>'
+Если запрос на создание изображения содержал заголовок X-Client-ID, то такой же заголовок нужно передавать в запросе на скачивание файла.
+
+curl -L -X GET 'https://gigachat.devices.sberbank.ru/api/v1/files/<идентификатор_изображения>/content' -o "<имя_файла>.jpg" \
+-H 'Accept: application/jpg' \
+-H 'X-Client-ID: <идентификатор_пользователя>' \
+-H 'Authorization: Bearer <токен_доступа>'
+Ответ на запрос будет содержать бинарное представление файла в формате JPG.
