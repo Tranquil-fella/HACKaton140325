@@ -162,25 +162,30 @@ class GigaChatApiClient {
      * @return array Analysis results
      * @throws Exception If analysis fails
      */
-    public function analyzeDescription($name, $category, $description) {
+    public function analyzeDescriptionAndGenerateImage($name, $category, $description) {
         $prompt = <<<EOT
-Проанализируй описание товара и оцени его по трем критериям по шкале от 1 до 10:
+Проанализируй описание товара и оцени его по трем критериям по шкале от 1 до 10, а также создай изображение товара.
+
+Для анализа текста:
 1. SEO-оптимизация
 2. Полнота информации
 3. Читабельность
 
 Также предложи не менее 3 конкретных рекомендаций по улучшению описания.
+В конце создай реалистичное профессиональное изображение товара для каталога на белом фоне, без текста и надписей.
 
 Название товара: {$name}
 Категория: {$category}
 Описание:
 {$description}
 
-Формат ответа должен быть в JSON:
-        {гргррвраfdfdbbsfbnsfnggkfkfkfksgfhfhwertwrwerwrwr51516515  "seo_score": число от 1 до 10,
+Формат ответа должен быть в JSON с изображением:
+{
+  "seo_score": число от 1 до 10,
   "completeness_score": число от 1 до 10,
   "readability_score": число от 1 до 10,
-  "recommendations": ["рекомендация 1", "рекомендация 2", "рекомендация 3"]
+  "recommendations": ["рекомендация 1", "рекомендация 2", "рекомендация 3"],
+  "image": "<сгенерированное изображение>"
 }
 EOT;
 
@@ -236,14 +241,12 @@ EOT;
      * @return string Path to the generated image
      * @throws Exception If image generation fails
      */
-    public function generateProductImage($name, $category, $imagesDir) {
+    public function processAndSaveImage($imageId, $name, $category, $imagesDir) {
         try {
             $imageName = md5($name . $category . time()) . '.jpg';
             $imagePath = $imagesDir . '/' . $imageName;
             
-            $prompt = "Сгенерируй реалистичное профессиональное изображение товара для каталога. Товар: {$name}. Категория: {$category}. Профессиональное фото на белом фоне. Без текста и надписей.";
-            
-            $this->generateAndDownloadPicture($prompt, $imagePath);
+            $this->downloadAndOptimizeImage($imageId, $imagePath);
             return $imagePath;
             
         } catch (Exception $e) {
