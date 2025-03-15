@@ -101,7 +101,6 @@ $analyzedProducts = $_SESSION['analyzed_products'];
                 <p class="lead">Анализ выполнен с помощью GigaChat API</p>
             </div>
         </div>
-
         <div class="row justify-content-center mb-4">
             <div class="col-md-10">
                 <div class="card bg-dark">
@@ -109,54 +108,29 @@ $analyzedProducts = $_SESSION['analyzed_products'];
                         <h5>Сводная информация</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4 text-center">
+                        <!-- Элемент с количеством проанализированных товаров -->
+                        <div class="row justify-content-center mb-4">
+                            <div class="col-md-8 text-center">
                                 <div class="stats-box">
                                     <h3><?php echo count($analyzedProducts); ?></h3>
                                     <p>Всего товаров проанализировано</p>
                                 </div>
                             </div>
-                            <div class="col-md-4 text-center">
-                                <div class="stats-box">
-                                    <h3>
-                                        <?php 
-                                        $avgSeoScore = array_sum(array_column(array_filter($analyzedProducts, function($p) { 
-                                            return isset($p['seo_score']); 
-                                        }), 'seo_score')) / count($analyzedProducts);
-                                        echo number_format($avgSeoScore, 1);
-                                        ?>
-                                    </h3>
-                                    <p>Средний SEO-рейтинг</p>
-                                </div>
-                            </div>
-                            <div class="col-md-4 text-center">
-                                <div class="stats-box">
-                                    <h3>
-                                        <?php 
-                                        $avgReadabilityScore = array_sum(array_column(array_filter($analyzedProducts, function($p) { 
-                                            return isset($p['readability_score']); 
-                                        }), 'readability_score')) / count($analyzedProducts);
-                                        echo number_format($avgReadabilityScore, 1);
-                                        ?>
-                                    </h3>
-                                    <p>Средняя читабельность</p>
-                                </div>
-                            </div>
                         </div>
 
-                        <div class="row mt-4">
-                            <div class="col-md-6">
-                                <canvas id="scoresChart"></canvas>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="download-box text-center">
+                        <!-- Элемент со скачиванием -->
+                        <div class="row justify-content-center">
+                            <div class="col-md-8 text-center">
+                                <div class="stats-box">
                                     <h4>Скачать результаты</h4>
-                                    <a href="download.php?type=csv" class="btn btn-primary m-2">
-                                        <i data-feather="file-text"></i> Скачать CSV с результатами
-                                    </a>
-                                    <a href="download.php?type=images" class="btn btn-primary m-2">
-                                        <i data-feather="image"></i> Скачать архив с изображениями
-                                    </a>
+                                    <div class="download-buttons">
+                                        <a href="download.php?type=csv" class="btn btn-primary m-2">
+                                            <i data-feather="file-text"></i> Скачать CSV с результатами
+                                        </a>
+                                        <a href="download.php?type=images" class="btn btn-primary m-2">
+                                            <i data-feather="image"></i> Скачать архив с изображениями
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -164,7 +138,6 @@ $analyzedProducts = $_SESSION['analyzed_products'];
                 </div>
             </div>
         </div>
-
         <div class="row justify-content-center">
             <div class="col-md-10">
                 <?php foreach ($analyzedProducts as $index => $product): ?>
@@ -174,67 +147,72 @@ $analyzedProducts = $_SESSION['analyzed_products'];
                         <span class="badge bg-secondary"><?php echo htmlspecialchars($product['category']); ?></span>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <?php if (isset($product['image_path']) && file_exists($product['image_path'])): ?>
-                                <div class="product-image-container">
-                                    <img src="<?php echo 'uploads/images/' . basename($product['image_path']); ?>" class="product-image" alt="<?php echo htmlspecialchars($product['name']); ?>">
-                                </div>
-                                <?php else: ?>
-                                <div class="product-image-placeholder">
-                                    <i data-feather="image" class="placeholder-icon"></i>
-                                    <p>Изображение не удалось сгенерировать</p>
-                                </div>
-                                <?php endif; ?>
-                            </div>
-                            <div class="col-md-8">
-                                <?php if (isset($product['error'])): ?>
-                                <div class="alert alert-danger">
-                                    <?php echo $product['error']; ?>
-                                </div>
-                                <?php else: ?>
-                                <h6>Описание:</h6>
-                                <p class="description-text"><?php echo nl2br(htmlspecialchars($product['description'])); ?></p>
-                                
-                                <div class="scores-container">
-                                    <div class="score-item">
-                                        <div class="score-label">SEO-оптимизация</div>
-                                        <div class="progress">
-                                            <div class="progress-bar bg-info" role="progressbar" style="width: <?php echo $product['seo_score'] * 10; ?>%" aria-valuenow="<?php echo $product['seo_score']; ?>" aria-valuemin="0" aria-valuemax="10">
-                                                <?php echo $product['seo_score']; ?>/10
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="score-item">
-                                        <div class="score-label">Полнота информации</div>
-                                        <div class="progress">
-                                            <div class="progress-bar bg-success" role="progressbar" style="width: <?php echo $product['completeness_score'] * 10; ?>%" aria-valuenow="<?php echo $product['completeness_score']; ?>" aria-valuemin="0" aria-valuemax="10">
-                                                <?php echo $product['completeness_score']; ?>/10
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="score-item">
-                                        <div class="score-label">Читабельность</div>
-                                        <div class="progress">
-                                            <div class="progress-bar bg-warning" role="progressbar" style="width: <?php echo $product['readability_score'] * 10; ?>%" aria-valuenow="<?php echo $product['readability_score']; ?>" aria-valuemin="0" aria-valuemax="10">
-                                                <?php echo $product['readability_score']; ?>/10
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="recommendations mt-3">
-                                    <h6>Рекомендации по улучшению:</h6>
-                                    <ul>
-                                        <?php foreach ($product['recommendations'] as $recommendation): ?>
-                                        <li><?php echo htmlspecialchars($recommendation); ?></li>
-                                        <?php endforeach; ?>
-                                    </ul>
-                                </div>
-                                <?php endif; ?>
-                            </div>
+    <!-- Текст и описание -->
+    <div class="row">
+        <div class="col-12">
+            <?php if (isset($product['error'])): ?>
+            <div class="alert alert-danger">
+                <?php echo $product['error']; ?>
+            </div>
+            <?php else: ?>
+            <h6>Описание:</h6>
+            <p class="description-text"><?php echo nl2br(htmlspecialchars($product['description'])); ?></p>
+            
+            <div class="scores-container">
+                <div class="score-item">
+                    <div class="score-label">SEO-оптимизация</div>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: <?php echo $product['seo_score'] * 10; ?>%" aria-valuenow="<?php echo $product['seo_score']; ?>" aria-valuemin="0" aria-valuemax="10">
+                            <?php echo $product['seo_score']; ?>/10
                         </div>
                     </div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">Полнота информации</div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: <?php echo $product['completeness_score'] * 10; ?>%" aria-valuenow="<?php echo $product['completeness_score']; ?>" aria-valuemin="0" aria-valuemax="10">
+                            <?php echo $product['completeness_score']; ?>/10
+                        </div>
+                    </div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">Читабельность</div>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: <?php echo $product['readability_score'] * 10; ?>%" aria-valuenow="<?php echo $product['readability_score']; ?>" aria-valuemin="0" aria-valuemax="10">
+                            <?php echo $product['readability_score']; ?>/10
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="recommendations mt-3">
+                <h6>Рекомендации по улучшению:</h6>
+                <ul>
+                    <?php foreach ($product['recommendations'] as $recommendation): ?>
+                    <li><?php echo htmlspecialchars($recommendation); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- Картинка -->
+    <div class="row">
+        <div class="col-12">
+            <?php if (isset($product['image_path']) && file_exists($product['image_path'])): ?>
+            <div class="product-image-container">
+                <img src="<?php echo 'uploads/images/' . basename($product['image_path']); ?>" class="product-image" alt="<?php echo htmlspecialchars($product['name']); ?>">
+            </div>
+            <?php else: ?>
+            <div class="product-image-placeholder">
+                <i data-feather="image" class="placeholder-icon"></i>
+                <p>Изображение не удалось сгенерировать</p>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
                 </div>
                 <?php endforeach; ?>
             </div>
