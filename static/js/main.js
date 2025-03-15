@@ -77,11 +77,39 @@ function setupDropzone() {
         fileName.textContent = file.name;
         fileSize.textContent = `${(file.size / 1024).toFixed(2)} KB`;
         submitBtn.disabled = false;
-        progressBar.style.width = '100%';
+        progressBar.style.width = '0%';
 
         // Update file input
         const dataTransfer = new DataTransfer();
         dataTransfer.items.add(file);
         fileInput.files = dataTransfer.files;
+
+        // Setup form submission with progress
+        const form = document.getElementById('upload-form');
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            const formData = new FormData(form);
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', form.action, true);
+
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.style.width = percentComplete + '%';
+                }
+            };
+
+            xhr.onload = function() {
+                if (xhr.status === 302 || xhr.status === 200) {
+                    window.location.href = 'results.php';
+                } else {
+                    alert('Ошибка при загрузке файла');
+                }
+            };
+
+            xhr.send(formData);
+            submitBtn.disabled = true;
+        };ataTransfer.files;
     }
 }
