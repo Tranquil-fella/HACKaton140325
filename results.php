@@ -41,19 +41,11 @@ if (!isset($_SESSION['analyzed_products'])) {
     // Analyze each product
     foreach ($products as $index => $product) {
         try {
-            // Analyze description and generate image with GigaChat API
-            $result = $apiClient->analyzeDescriptionAndGenerateImage($product['name'], $product['category'], $product['description']);
+            // Analyze description with GigaChat API
+            $analysis = $apiClient->analyzeDescription($product['name'], $product['category'], $product['description']);
             
-            // Extract analysis results
-            $analysis = [
-                'seo_score' => $result['seo_score'],
-                'completeness_score' => $result['completeness_score'],
-                'readability_score' => $result['readability_score'],
-                'recommendations' => $result['recommendations']
-            ];
-            
-            // Process and save the image
-            $imagePath = $apiClient->processAndSaveImage($result['image'], $product['name'], $product['category'], $imagesDir);
+            // Generate image for the product
+            $imagePath = $apiClient->generateProductImage($product['name'], $product['category'], $imagesDir);
             
             // Add analysis results and image path to product data
             $product['seo_score'] = $analysis['seo_score'];
