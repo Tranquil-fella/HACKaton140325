@@ -237,108 +237,97 @@ EOT;
      * @throws Exception If image generation fails
      */
     public function generateProductImage($name, $category, $imagesDir) {
-        // Create logs directory if it doesn't exist
-        $logsDir = __DIR__ . '/../logs';
-        if (!is_dir($logsDir)) {
-            if (!@mkdir($logsDir, 0777, true)) {
-                error_log("Failed to create logs directory: " . error_get_last()['message']);
-            }
-            chmod($logsDir, 0777);
-        }
-
-        // Ensure log file is writable
-        $logFile = $logsDir . '/image_generation.log';
-        if (!file_exists($logFile)) {
-            touch($logFile);
-            chmod($logFile, 0666);
-        }
-        file_put_contents($logFile, date('Y-m-d H:i:s') . " Starting image generation for: $name\n", FILE_APPEND);
-
-        $prompt = "Сгенерируй реалистичное профессиональное изображение товара для каталога. Товар: {$name}. Категория: {$category}. Профессиональное фото на белом фоне. Без текста и надписей.";
-
-        file_put_contents($logFile, date('Y-m-d H:i:s') . " Prompt: $prompt\n", FILE_APPEND);
-
-        // Use chat completions endpoint to generate images
-        $data = [
-            'model' => 'GigaChat',
-            'stream' => false,
-            'update_interval' => 0,
-            'function_call' => 'auto',
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => 'Ты - генератор изображений товаров для каталога. Создавай высококачественные изображения без текста и надписей.'
-                ],
-                [
-                    'role' => 'user',
-                    'content' => $prompt
-                ]
-            ]
-        ];
-
         try {
-            // Make API request for image
-            $response = $this->makeRequest('/chat/completions', $data);
-
-            if (!isset($response['choices'][0]['message']['content'])) {
-                throw new Exception('Неверный формат ответа от API при генерации изображения');
-            }
-
-            // Log the response
-            file_put_contents($logFile, date('Y-m-d H:i:s') . " API Response:\n" . json_encode($response, JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
-
-            // Extract the image ID from the response content
-            $content = $response['choices'][0]['message']['content'];
-            file_put_contents($logFile, date('Y-m-d H:i:s') . " Content: $content\n", FILE_APPEND);
-            $matches = [];
-
-            // Try to find image ID in the response
-            if (preg_match('/<img.*?src="([^"]+)".*?fuse="true".*?>/i', $content, $matches)) {
-                $imageId = $matches[1];
-                $imageName = md5($name . $category . time()) . '.jpg';
-                $imagePath = $imagesDir . '/' . $imageName;
-
-                // Download image using curl
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, "https://gigachat.devices.sberbank.ru/api/v1/files/{$imageId}/content");
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                    'Accept: application/jpg',
-                    'Authorization: Bearer ' . $this->accessToken
-                ]);
-                
-                $imageContent = curl_exec($ch);
-                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                curl_close($ch);
-
-                if ($httpCode !== 200 || empty($imageContent)) {
-                    // Generate a placeholder image if download failed
-                    $this->generatePlaceholderImage($name, $category, $imagePath);
-                    return $imagePath;
-                }
-
-                if (file_put_contents($imagePath, $imageContent) === false) {
-                    throw new Exception('Не удалось сохранить изображение');
-                }
-
-                return $imagePath;
-            } else {
-                // Generate a placeholder image since no URL was found
-                $imageName = md5($name . $category . time()) . '.png';
-                $imagePath = $imagesDir . '/' . $imageName;
-                $this->generatePlaceholderImage($name, $category, $imagePath);
-                return $imagePath;
-            }
-
+            $imageName = md5($name . $category . time()) . '.jpg';
+            $imagePath = $imagesDir . '/' . $imageName;
+            
+            $prompt = "Сгенерируй реалистичное профессиональное изображение товара для каталога. Товар: {$name}. Категория: {$category}. Профессиональное фото на белом фоне. Без текста и надписей.";
+            
+            $this->generateAndDownloadPicture($prompt, $imagePath);
+            return $imagePath;
+            
         } catch (Exception $e) {
-            // Log the error but don't halt execution
             error_log('Error generating image: ' . $e->getMessage());
-
-            // Generate placeholder image
+            
+            // Generate placeholder image if something goes wrong
             $imageName = md5($name . $category . time()) . '.png';
             $imagePath = $imagesDir . '/' . $imageName;
             $this->generatePlaceholderImage($name, $category, $imagePath);
             return $imagePath;
+        }
+    }
+
+    /**
+     * Generate a picture using GigaChat and download it.
+     *
+     * @param string $prompt The user's prompt for the image
+     * @param string $outputFilePath Where to save the downloaded image file
+     * @throws Exception If any step in the process fails
+     */
+    private function generateAndDownloadPicture($prompt, $outputFilePath) {
+        // Step 1: Generate the picture
+        $requestData = [
+            "model" => "GigaChat",
+            "messages" => [
+                [
+                    "role" => "system",
+                    "content" => "Создай профессиональное изображение для каталога товаров"
+                ],
+                [
+                    "role" => "user",
+                    "content" => $prompt
+                ]
+            ],
+            "function_call" => "auto"
+        ];
+
+        $response = $this->makeRequest('/chat/completions', $requestData);
+
+        if (!isset($response['choices'][0]['message']['content'])) {
+            throw new Exception("Invalid response from GigaChat API: No content found.");
+        }
+
+        $content = $response['choices'][0]['message']['content'];
+        if (!preg_match('/<img src="([^"]+)"/', $content, $matches)) {
+            throw new Exception("No image ID found in the response content.");
+        }
+
+        $imageId = $matches[1];
+        $this->downloadPicture($imageId, $outputFilePath);
+    }
+
+    /**
+     * Download a picture from GigaChat API.
+     *
+     * @param string $imageId The unique ID of the image to download
+     * @param string $outputFilePath Where to save the downloaded image file
+     * @throws Exception If the download fails
+     */
+    private function downloadPicture($imageId, $outputFilePath) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $this->baseUrl . "/files/{$imageId}/content");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Accept: application/jpg",
+            "Authorization: Bearer " . $this->accessToken
+        ]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Note: Enable in production
+
+        $imageData = curl_exec($ch);
+        
+        if (curl_errno($ch)) {
+            throw new Exception("cURL Error: " . curl_error($ch));
+        }
+
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200) {
+            throw new Exception("Failed to download image. HTTP Code: $httpCode");
+        }
+
+        if (file_put_contents($outputFilePath, $imageData) === false) {
+            throw new Exception("Failed to save the image to $outputFilePath");
         }
     }
 
