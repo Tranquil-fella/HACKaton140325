@@ -1,0 +1,7 @@
+{
+    "php.validate.executablePath": "/usr/bin/php", // Path to your PHP executable
+    "php.validate.run": "onType", // Lint as you type
+    "php.validate.enable": true, // Enable PHP linting
+    "intelephense.environment.phpVersion": "8.1.0", // Set your PHP version
+    "intelephense.diagnostics.enable": true // Enable Intelephense diagnostics
+}
